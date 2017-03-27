@@ -26,9 +26,9 @@ public:
   /** inactivity timeout in milliseconds */
   const unsigned long s_ulInactivityDelay = 10000;
 
-  PinButton(uint8_t bPin);
+  PinButton(const uint8_t bPin);
 
-  bool getAndDispatchKey(unsigned long ulNow);
+  bool getAndDispatchKey(const unsigned long ulNow);
 
   /** call backs.  derive a class and overwrite those */
   virtual bool onUserInActivity(unsigned long ulNow) = 0;
@@ -37,7 +37,7 @@ public:
   virtual bool onLongKeyDown() = 0;
   virtual bool onKeyUp(bool bLong) = 0;
 
-  bool isUserLongInactive(unsigned long ulNow) 
+  bool isUserLongInactive(const unsigned long ulNow) 
   {
     return (ulNow > m_ulToFireInactivity);
   }
@@ -45,7 +45,7 @@ public:
    * Delay inactivity notification.
    * User does NOT have to call it. 
    */
-  virtual void onUserActivity(unsigned long ulNow) 
+  virtual void onUserActivity(const unsigned long ulNow) 
   {
     m_ulToFireInactivity = ulNow + s_ulInactivityDelay;
   }
