@@ -1,7 +1,17 @@
 #include <Arduino.h>
+#include <Wire.h>
 #include <U8g2lib.h>
+#include <Adafruit_INA219.h>
 #include "PinButton.h"
 #include "Trace.h"
+
+Adafruit_INA219 ina219;
+
+#if defined(ARDUINO_ARCH_SAMD)
+// for Zero, output on USB Serial console, remove line below if using programming port to program the Zero!
+   #define Serial SerialUSB
+#endif
+
 
 //U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
@@ -15,7 +25,7 @@ bool g_bDisplayFreeze = false;
 class MyButton : public PinButton
 {
 public:
-  MyButton(uint8_t bPin) : PinButton(bPin) {}
+  MyButton(const uint8_t bPin) : PinButton(bPin) {}
   
   bool onUserInActivity(unsigned long ulNow)
   {
@@ -50,6 +60,16 @@ void setup(void)
   delay(1000);   
   //while(!Serial)  ; // wait for serial port to connect. Needed for Leonardo only
   DEBUG_PRINTLN("Meter test!");
+
+  // Initialize the INA219.
+  // By default the initialization will use the largest range (32V, 2A).  However
+  // you can call a setCalibration function to change this range (see comments).
+  ina219.begin();
+  // To use a slightly lower 32V, 1A range (higher precision on amps):
+  //ina219.setCalibration_32V_1A();
+  // Or to use a lower 16V, 400mA range (higher precision on volts and amps):
+  //ina219.setCalibration_16V_400mA();
+  
    
   u8g2.begin();
   g_uDisplayWidth = u8g2.getWidth();
@@ -77,6 +97,15 @@ void loop(void)
   }
   if(g_bDisplayFreeze)
     return;
+  
+  //
+  // do some measurement
+  //
+  float shuntVoltage = ina219.getShuntVoltage_mV();
+  float busVoltage = ina219.getBusVoltage_V();
+  float loadVoltage_mV = (busVoltage*1000) + shuntVoltage;
+  float current_mA = ina219.getCurrent_mA();
+
   // 
   // update the display
   //
@@ -84,9 +113,11 @@ void loop(void)
 
   int8_t iLineHeight = 30; // u8g2.getAscent() + u8g2.getDescent();
   int8_t iRow = iLineHeight;
-  drawLine(iRow, (int16_t)ulNow, "mA");
+  current_mA = (float)ulNow;
+  drawLine(iRow, (int16_t)current_mA, "mA");
   iRow += iLineHeight;
-  drawLine(iRow, (int16_t)millis(), "mV");
+  loadVoltage_mV = (float)millis();
+  drawLine(iRow, (int16_t)loadVoltage_mV, "mV");
   
   u8g2.sendBuffer();                  // transfer internal memory to the display
 }
