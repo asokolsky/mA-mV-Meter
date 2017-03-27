@@ -3,13 +3,13 @@
 #include "PinButton.h"
 #include "Trace.h"
 
-PinButton::PinButton(uint8_t bPin) : m_bPin(bPin)
+PinButton::PinButton(const uint8_t bPin) : m_bPin(bPin)
 {
   pinMode(m_bPin, INPUT_PULLUP);
 }
 
 
-bool PinButton::getAndDispatchKey(unsigned long ulNow)
+bool PinButton::getAndDispatchKey(const unsigned long ulNow)
 {
   // get out if we are still bouncing!
   if(ulNow < m_ulBounceSubsided)
