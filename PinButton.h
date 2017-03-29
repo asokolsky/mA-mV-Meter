@@ -21,6 +21,10 @@ public:
   const int s_iDebounceDelay = 50;
   /** delay in ms to autorepeat */
   const int s_iAutoRepeatDelay = 500;
+  /** time in ms to consider this a click */
+  const int s_iClick = 300;
+  /** time in ms to consider this a doubleclick */
+  const int s_iDoubleClick = 500;
   /** delay in ms before the long key is fired */
   const int s_iLongKeyDelay = 3000;
   /** inactivity timeout in milliseconds */
@@ -36,6 +40,8 @@ public:
   virtual bool onKeyDown() = 0;
   virtual bool onLongKeyDown() = 0;
   virtual bool onKeyUp(bool bLong) = 0;
+  virtual bool onClick() = 0;
+  virtual bool onDoubleClick() = 0;
 
   bool isUserLongInactive(const unsigned long ulNow) 
   {
@@ -61,6 +67,10 @@ protected:
   unsigned long m_ulBounceSubsided = 0;
   /** when inactivity timeout will happen */
   unsigned long m_ulToFireInactivity = s_ulInactivityDelay;
+  /** when is it not yet late enought to consier this a click */
+  unsigned long m_ulToClick = 0;
+  /** when is it not yet late enought to consier this a double click */
+  unsigned long m_ulToDoubleClick = 0;
 
   /** the key state when we last called getAndDispatchKey */
   bool m_bOldPressed = false;

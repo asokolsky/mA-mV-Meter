@@ -61,6 +61,7 @@ bool PinButton::getAndDispatchKey(const unsigned long ulNow)
     m_ulBounceSubsided = 0;
     DEBUG_PRINTLN("onKeyDown");
     bRes = onKeyDown();
+    m_ulToClick = ulNow + s_iClick;
   }
   else
   {
@@ -69,6 +70,12 @@ bool PinButton::getAndDispatchKey(const unsigned long ulNow)
     m_ulToFireAutoRepeat = m_ulToFireLongKey = m_ulBounceSubsided = 0;
     DEBUG_PRINTLN("onKeyUp");
     bRes = onKeyUp(bLongKey);
+    if(ulNow < m_ulToClick)
+      onClick();    
+    if(ulNow < m_ulToDoubleClick)
+      onDoubleClick();
+    else
+      m_ulToDoubleClick = ulNow + s_iDoubleClick;
   }
   onUserActivity(ulNow);
   m_bOldPressed = bPressed;
