@@ -20,7 +20,8 @@ u8g2_uint_t g_uDisplayWidth = 0;
 //u8g2_uint_t g_uDisplayHeight = 0;
 u8g2_uint_t g_uColUnits = 0;
 
-bool g_bDisplayFreeze = false;
+/** update the display this often (in ms) */
+int16_t g_iDisplayUpdate = 1;
 
 class MyButton : public PinButton
 {
@@ -30,23 +31,43 @@ public:
   bool onUserInActivity(unsigned long ulNow)
   {
     DEBUG_PRINT("MyButton::onUserInActivity(");DEBUG_PRINTDEC(ulNow);DEBUG_PRINTLN(")");    
+    return false;
   }
   bool onKeyAutoRepeat()
   {
     DEBUG_PRINTLN("MyButton::onKeyAutoRepeat()");
+    return false;
   }
   bool onKeyDown()
   {
     DEBUG_PRINTLN("MyButton::onKeyDown()");
+    return false;
   }
   bool onLongKeyDown()
   {
     DEBUG_PRINTLN("MyButton::onLongKeyDown()");
+    return false;
   }
   bool onKeyUp(bool bLong)
   {
     DEBUG_PRINT("MyButton::onKeyUp(bLong=");DEBUG_PRINTDEC(bLong);DEBUG_PRINTLN(")");  
-    g_bDisplayFreeze = !g_bDisplayFreeze;
+    return false;
+  }
+  bool onClick()
+  {
+    DEBUG_PRINTLN("MyButton::onClick");
+      static int16_t iDisplayUpdateOptions[] = {10, 500, 2000};
+      static int8_t i = 1;
+      g_iDisplayUpdate = iDisplayUpdateOptions[i++];
+      DEBUG_PRINT("g_iDisplayUpdate=");DEBUG_PRINTDEC(g_iDisplayUpdate);DEBUG_PRINTLN("");  
+      if(i >= (sizeof(iDisplayUpdateOptions)/sizeof(iDisplayUpdateOptions[0])))
+        i = 0;
+    return false;
+  }
+  bool onDoubleClick()
+  {
+    DEBUG_PRINTLN("MyButton::onDoubleClick");
+    return false;
   }
   
 };
@@ -95,9 +116,10 @@ void loop(void)
     // return;
     ;
   }
-  if(g_bDisplayFreeze)
+  static unsigned long ulNextUpdate = 0;
+  if(ulNow < ulNextUpdate)
     return;
-  
+  ulNextUpdate = ulNow + (unsigned long)g_iDisplayUpdate;
   //
   // do some measurement
   //
