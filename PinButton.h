@@ -47,6 +47,10 @@ public:
   {
     return (ulNow > m_ulToFireInactivity);
   }
+  bool isKeyDown()
+  {
+    return m_bOldPressed;
+  }
   /** 
    * Delay inactivity notification.
    * User does NOT have to call it. 
