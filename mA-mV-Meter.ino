@@ -16,9 +16,9 @@ Adafruit_INA219 ina219;
 //U8G2_SSD1306_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
-u8g2_uint_t g_uDisplayWidth = 0;
+//u8g2_uint_t g_uDisplayWidth = 0;
 //u8g2_uint_t g_uDisplayHeight = 0;
-u8g2_uint_t g_uColUnits = 0;
+//u8g2_uint_t g_uColUnits = 0;
 
 /** update the display this often (in ms) */
 int16_t g_iDisplayUpdate = 1;
@@ -93,20 +93,47 @@ void setup(void)
   
    
   u8g2.begin();
-  g_uDisplayWidth = u8g2.getWidth();
-  g_uColUnits = g_uDisplayWidth - 35; 
+  //g_uDisplayWidth = u8g2.getWidth();
+  //g_uColUnits = u8g2.getWidth() - 35; 
   //g_uDisplayHeight = u8g2.getHeight();
 }
 
-void drawLine(int8_t iRow, int16_t iValue, const char *szUnits)
+/** draw batttery gauge */
+void drawBattery(u8g2_uint_t x, u8g2_uint_t y, uint8_t percentfull)
+{
+  u8g2_uint_t w = 14;
+  u8g2_uint_t h = 8;
+  u8g2.drawFrame(x, y, w, h);
+  u8g2.drawVLine(x+w, y+3, h-6);
+  x += 2;
+  y += 2;
+  h -= 4;
+  w -= 4;
+  if(percentfull > 10)
+    u8g2.drawBox(x, y, (percentfull > 90) ? w : map(percentfull, 0, 100, 0, w), h);
+}
+
+/** draw title bar including batttery gauge */
+void drawTitleBar(int16_t iDisplayUpdate)
+{
+  u8g2.setFont(u8g2_font_profont10_mf);
+  char buf[40];
+  sprintf(buf, "%ims", iDisplayUpdate);
+  u8g2.drawStr(0, 8, buf);
+  uint8_t percentfull = (millis() / 100) % 100;
+  drawBattery(u8g2.getWidth() - 15, 0, percentfull);
+}
+
+void drawLine(u8g2_uint_t iRow, int16_t iValue, const char *szUnits)
 {
   u8g2.setFont(u8g2_font_helvR24_tf);
   char buf[80];
   sprintf(buf, "%5.3i", iValue);
   u8g2.drawStr(0, iRow, buf);  
   u8g2.setFont(u8g2_font_helvR14_tf);
-  u8g2.drawStr(g_uColUnits, iRow, szUnits);
+  u8g2.drawStr(u8g2.getWidth() - 30, iRow, szUnits);
 }
+
 
 void loop(void) 
 {
@@ -116,6 +143,11 @@ void loop(void)
     // return;
     ;
   }
+  //
+  // freeze display while the key is down
+  //
+  if(g_button.isKeyDown())
+    return;
   static unsigned long ulNextUpdate = 0;
   if(ulNow < ulNextUpdate)
     return;
@@ -132,9 +164,12 @@ void loop(void)
   // update the display
   //
   u8g2.clearBuffer();                 // clear the internal memory
-
-  int8_t iLineHeight = 30; // u8g2.getAscent() + u8g2.getDescent();
-  int8_t iRow = iLineHeight;
+  
+  drawTitleBar(g_iDisplayUpdate);
+  
+  const int8_t iTitleBarHeight = 8;
+  const int8_t iLineHeight = 27;
+  u8g2_uint_t iRow = iLineHeight + iTitleBarHeight;
   current_mA = (float)ulNow;
   drawLine(iRow, (int16_t)current_mA, "mA");
   iRow += iLineHeight;
