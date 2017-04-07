@@ -17,7 +17,7 @@ public:
   const uint16_t uReadingBatteryFull = 330;  // 4.2V per cell - 16.8V total
   
   /**  update period 10sec */
-  static const unsigned long ulUpdatePeriod = 1*1000;
+  static const unsigned long ulUpdatePeriod = 10*1000;
 
 protected:  
   uint8_t m_pin;
