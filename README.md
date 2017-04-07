@@ -4,3 +4,12 @@ Also has a button to switch view.
 
 Schematics and PCB:
 https://easyeda.com/asokolsky/mA_mV_Meter-73d0762d38e042d7a0c913b19c197fde
+
+## User Guide
+
+Press and hold the button to freeze display.
+
+Click button to switch update period between 100ms/500ms/2000ms
+
+Double-click the button to show/hide the voltage.
+
