@@ -18,12 +18,9 @@ BatteryMonitor g_batteryMonitor(A0);
 U8G2_SSD1306_128X64_NONAME_F_HW_I2C g_u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 //U8G2_SH1106_128X64_NONAME_F_HW_I2C g_u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
 
-//g_u8g2_uint_t g_uDisplayWidth = 0;
-//g_u8g2_uint_t g_uDisplayHeight = 0;
-//g_g_u8g2_uint_t g_uColUnits = 0;
-
 /** update the display this often (in ms) */
 int16_t g_iDisplayUpdate = 10;
+bool g_bShowVoltage = true;
 
 class MyButton : public PinButton
 {
@@ -52,7 +49,7 @@ public:
   }
   bool onKeyUp(bool bLong)
   {
-    DEBUG_PRINT("MyButton::onKeyUp(bLong=");DEBUG_PRINTDEC(bLong);DEBUG_PRINTLN(")");  
+    DEBUG_PRINT("MyButton::onKeyUp(bLong=");DEBUG_PRINTDEC(bLong);DEBUG_PRINTLN(")");
     return true;
   }
   bool onClick()
@@ -69,6 +66,7 @@ public:
   bool onDoubleClick()
   {
     DEBUG_PRINTLN("MyButton::onDoubleClick");
+    g_bShowVoltage = !g_bShowVoltage;
     return false;
   }
   
@@ -91,7 +89,7 @@ void setup(void)
   // To use a slightly lower 32V, 1A range (higher precision on amps):
   //g_ina219.setCalibration_32V_1A();
   // Or to use a lower 16V, 400mA range (higher precision on volts and amps):
-  //g_ina219.setCalibration_16V_400mA();
+  g_ina219.setCalibration_16V_400mA();
   
    
   g_u8g2.begin();
@@ -129,8 +127,9 @@ void drawLine(u8g2_uint_t iRow, int16_t iValue, const char *szUnits)
 {
   g_u8g2.setFont(u8g2_font_helvR24_tf);
   char buf[80];
-  sprintf(buf, "%5.3i", iValue);
-  g_u8g2.drawStr(0, iRow, buf);  
+  //sprintf(buf, "%5.3i", iValue);
+  sprintf(buf, "%i", iValue);
+  g_u8g2.drawStr(g_u8g2.getWidth() - 30 - g_u8g2.getStrWidth(buf) - 5, iRow, buf);
   g_u8g2.setFont(u8g2_font_helvR14_tf);
   g_u8g2.drawStr(g_u8g2.getWidth() - 30, iRow, szUnits);
 }
@@ -159,11 +158,16 @@ void loop(void)
   //
   // do some measurement
   //
-  float shuntVoltage = g_ina219.getShuntVoltage_mV();
-  float busVoltage = g_ina219.getBusVoltage_V();
-  float loadVoltage_mV = (busVoltage*1000) + shuntVoltage;
+  float shuntVoltage_mV = g_ina219.getShuntVoltage_mV();
+  float busVoltage_V = g_ina219.getBusVoltage_V();
+  float loadVoltage_mV = (busVoltage_V*1000) + shuntVoltage_mV;
   float current_mA = g_ina219.getCurrent_mA();
-
+/*
+Serial.print("Bus Voltage: "); Serial.print(busVoltage_V); Serial.println(" V");
+Serial.print("Shunt Voltage: "); Serial.print(shuntVoltage_mV); Serial.println(" mV");
+//Serial.print("Load Voltage: "); Serial.print(loadvoltage); Serial.println(" V");
+Serial.print("Current: "); Serial.print(current_mA); Serial.println(" mA");
+*/
   // 
   // update the display
   //
@@ -174,12 +178,14 @@ void loop(void)
   const int8_t iTitleBarHeight = 8;
   const int8_t iLineHeight = 27;
   u8g2_uint_t iRow = iLineHeight + iTitleBarHeight;
-  current_mA = (float)ulNow;
+  //current_mA = (float)ulNow;
   drawLine(iRow, (int16_t)current_mA, "mA");
-  iRow += iLineHeight;
-  loadVoltage_mV = (float)millis();
-  drawLine(iRow, (int16_t)loadVoltage_mV, "mV");
-  
+  if(g_bShowVoltage)
+  {
+    iRow += iLineHeight;
+    //loadVoltage_mV = (float)millis();
+    drawLine(iRow, (int16_t)loadVoltage_mV, "mV");
+  }
   g_u8g2.sendBuffer();                  // transfer internal memory to the display
 }
 
