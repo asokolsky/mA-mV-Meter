@@ -96,6 +96,8 @@ void setup(void)
   //g_uDisplayWidth = g_u8g2.getWidth();
   //g_uColUnits = g_u8g2.getWidth() - 35; 
   //g_uDisplayHeight = g_u8g2.getHeight();
+  
+  g_batteryMonitor.update(millis());
 }
 
 /** draw batttery gauge */
